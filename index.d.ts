@@ -63,6 +63,7 @@ export interface PdfProps {
     onPageSingleTap?: (page: number, x: number, y: number) => void,
     onScaleChanged?: (scale: number) => void,
     onPressLink?: (url: string) => void,
+    onEndReached?: () => void,
 }
 
 declare class Pdf extends React.Component<PdfProps, any> {
