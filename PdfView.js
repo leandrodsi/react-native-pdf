@@ -40,6 +40,7 @@ export default class PdfView extends Component {
         singlePage: PropTypes.bool,
         onPageSingleTap: PropTypes.func,
         onScaleChanged: PropTypes.func,
+        onEndReached: PropTypes.func,
         showsHorizontalScrollIndicator: PropTypes.bool,
         showsVerticalScrollIndicator: PropTypes.bool,
     };
@@ -64,6 +65,7 @@ export default class PdfView extends Component {
         },
         onScaleChanged: (scale) => {
         },
+        onEndReached: () => {},
         showsHorizontalScrollIndicator: true,
         showsVerticalScrollIndicator: true,
     };
@@ -373,6 +375,7 @@ export default class PdfView extends Component {
                 onScroll={this._onScroll}
                 onContentSizeChange={this._onListContentSizeChange}
                 scrollEnabled={!this.props.singlePage}
+                onEndReached={this.props.onEndReached}
             />
         );
 
