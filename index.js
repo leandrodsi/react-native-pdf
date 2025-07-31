@@ -7,7 +7,7 @@
  */
 
 'use strict';
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import {
     View,
@@ -19,9 +19,9 @@ import {
 } from 'react-native';
 import PdfViewNativeComponent, {
     Commands as PdfViewCommands,
-  } from './fabric/RNPDFPdfNativeComponent';
+} from './fabric/RNPDFPdfNativeComponent';
 import ReactNativeBlobUtil from 'react-native-blob-util'
-import {ViewPropTypes} from 'deprecated-react-native-prop-types';
+import { ViewPropTypes } from 'deprecated-react-native-prop-types';
 const SHA1 = require('crypto-js/sha1');
 import PdfView from './PdfView';
 
@@ -107,6 +107,8 @@ export default class Pdf extends Component {
         },
         onPressLink: (url) => {
         },
+        onEndReached: () => {
+        },
     };
 
     constructor(props) {
@@ -162,7 +164,7 @@ export default class Pdf extends Component {
         let uri = source.uri || '';
         // first set to initial state
         if (this._mounted) {
-            this.setState({isDownloaded: false, path: '', progress: 0});
+            this.setState({ isDownloaded: false, path: '', progress: 0 });
         }
         const filename = source.cacheFileName || SHA1(uri) + '.pdf';
         const cacheFile = ReactNativeBlobUtil.fs.dirs.CacheDir + '/' + filename;
@@ -173,7 +175,7 @@ export default class Pdf extends Component {
                 .then(stats => {
                     if (!Boolean(source.expiration) || (source.expiration * 1000 + stats.lastModified) > (new Date().getTime())) {
                         if (this._mounted) {
-                            this.setState({path: cacheFile, isDownloaded: true});
+                            this.setState({ path: cacheFile, isDownloaded: true });
                         }
                     } else {
                         // cache expirated then reload it
@@ -212,7 +214,7 @@ export default class Pdf extends Component {
                         .cp(uri, cacheFile)
                         .then(() => {
                             if (this._mounted) {
-                                this.setState({path: cacheFile, isDownloaded: true, progress: 1});
+                                this.setState({ path: cacheFile, isDownloaded: true, progress: 1 });
                             }
                         })
                         .catch(async (error) => {
@@ -225,7 +227,7 @@ export default class Pdf extends Component {
                         .writeFile(cacheFile, data, 'base64')
                         .then(() => {
                             if (this._mounted) {
-                                this.setState({path: cacheFile, isDownloaded: true, progress: 1});
+                                this.setState({ path: cacheFile, isDownloaded: true, progress: 1 });
                             }
                         })
                         .catch(async (error) => {
@@ -234,7 +236,7 @@ export default class Pdf extends Component {
                         });
                 } else {
                     if (this._mounted) {
-                       this.setState({
+                        this.setState({
                             path: decodeURIComponent(uri.replace(/file:\/\//i, '')),
                             isDownloaded: true,
                         });
@@ -276,7 +278,7 @@ export default class Pdf extends Component {
             .progress((received, total) => {
                 this.props.onLoadProgress && this.props.onLoadProgress(received / total);
                 if (this._mounted) {
-                    this.setState({progress: received / total});
+                    this.setState({ progress: received / total });
                 }
             })
             .catch(async (error) => {
@@ -314,7 +316,7 @@ export default class Pdf extends Component {
                     .cp(tempCacheFile, cacheFile)
                     .then(() => {
                         if (this._mounted) {
-                            this.setState({path: cacheFile, isDownloaded: true, progress: 1});
+                            this.setState({ path: cacheFile, isDownloaded: true, progress: 1 });
                         }
                         this._unlinkFile(tempCacheFile);
                     })
@@ -339,28 +341,28 @@ export default class Pdf extends Component {
     }
 
     setNativeProps = nativeProps => {
-        if (this._root){
+        if (this._root) {
             this._root.setNativeProps(nativeProps);
         }
     };
 
-    setPage( pageNumber ) {
-        if ( (pageNumber === null) || (isNaN(pageNumber)) ) {
+    setPage(pageNumber) {
+        if ((pageNumber === null) || (isNaN(pageNumber))) {
             throw new Error('Specified pageNumber is not a number');
         }
-        if (!!global?.nativeFabricUIManager ) {
+        if (!!global?.nativeFabricUIManager) {
             if (this._root) {
                 PdfViewCommands.setNativePage(
                     this._root,
                     pageNumber,
                 );
             }
-          } else {
+        } else {
             this.setNativeProps({
                 page: pageNumber
             });
-          }
-        
+        }
+
     }
 
     _onChange = (event) => {
@@ -374,15 +376,15 @@ export default class Pdf extends Component {
             if (message[0] === 'loadComplete') {
                 let tableContents;
                 try {
-                    tableContents = message[4]&&JSON.parse(message[4]);
-                } catch(e) {
+                    tableContents = message[4] && JSON.parse(message[4]);
+                } catch (e) {
                     tableContents = message[4];
                 }
                 this.props.onLoadComplete && this.props.onLoadComplete(Number(message[1]), this.state.path, {
                     width: Number(message[2]),
                     height: Number(message[3]),
                 },
-                tableContents
+                    tableContents
                 );
             } else if (message[0] === 'pageChanged') {
                 this.props.onPageChanged && this.props.onPageChanged(Number(message[1]), Number(message[2]));
@@ -407,47 +409,47 @@ export default class Pdf extends Component {
 
     render() {
         if (Platform.OS === "android" || Platform.OS === "ios" || Platform.OS === "windows") {
-                return (
-                    <View style={[this.props.style,{overflow: 'hidden'}]}>
-                        {!this.state.isDownloaded?
-                            (<View
-                                style={[styles.progressContainer, this.props.progressContainerStyle]}
-                            >
-                                {this.props.renderActivityIndicator
-                                    ? this.props.renderActivityIndicator(this.state.progress)
-                                    : <Text>{`${(this.state.progress * 100).toFixed(2)}%`}</Text>}
-                            </View>):(
-                                Platform.OS === "android" || Platform.OS === "windows"?(
-                                        <PdfCustom
-                                            ref={component => (this._root = component)}
-                                            {...this.props}
-                                            style={[{flex:1,backgroundColor: '#EEE'}, this.props.style]}
-                                            path={this.state.path}
-                                            onChange={this._onChange}
-                                        />
-                                    ):(
-                                        this.props.usePDFKit ?(
-                                                <PdfCustom
-                                                    ref={component => (this._root = component)}
-                                                    {...this.props}
-                                                    style={[{backgroundColor: '#EEE',overflow: 'hidden'}, this.props.style]}
-                                                    path={this.state.path}
-                                                    onChange={this._onChange}
-                                                />
-                                            ):(<PdfView
-                                                {...this.props}
-                                                style={[{backgroundColor: '#EEE',overflow: 'hidden'}, this.props.style]}
-                                                path={this.state.path}
-                                                onLoadComplete={this.props.onLoadComplete}
-                                                onPageChanged={this.props.onPageChanged}
-                                                onError={this._onError}
-                                                onPageSingleTap={this.props.onPageSingleTap}
-                                                onScaleChanged={this.props.onScaleChanged}
-                                                onPressLink={this.props.onPressLink}
-                                            />)
-                                    )
-                                )}
-                    </View>);
+            return (
+                <View style={[this.props.style, { overflow: 'hidden' }]}>
+                    {!this.state.isDownloaded ?
+                        (<View
+                            style={[styles.progressContainer, this.props.progressContainerStyle]}
+                        >
+                            {this.props.renderActivityIndicator
+                                ? this.props.renderActivityIndicator(this.state.progress)
+                                : <Text>{`${(this.state.progress * 100).toFixed(2)}%`}</Text>}
+                        </View>) : (
+                            Platform.OS === "android" || Platform.OS === "windows" ? (
+                                <PdfCustom
+                                    ref={component => (this._root = component)}
+                                    {...this.props}
+                                    style={[{ flex: 1, backgroundColor: '#EEE' }, this.props.style]}
+                                    path={this.state.path}
+                                    onChange={this._onChange}
+                                />
+                            ) : (
+                                this.props.usePDFKit ? (
+                                    <PdfCustom
+                                        ref={component => (this._root = component)}
+                                        {...this.props}
+                                        style={[{ backgroundColor: '#EEE', overflow: 'hidden' }, this.props.style]}
+                                        path={this.state.path}
+                                        onChange={this._onChange}
+                                    />
+                                ) : (<PdfView
+                                    {...this.props}
+                                    style={[{ backgroundColor: '#EEE', overflow: 'hidden' }, this.props.style]}
+                                    path={this.state.path}
+                                    onLoadComplete={this.props.onLoadComplete}
+                                    onPageChanged={this.props.onPageChanged}
+                                    onError={this._onError}
+                                    onPageSingleTap={this.props.onPageSingleTap}
+                                    onScaleChanged={this.props.onScaleChanged}
+                                    onPressLink={this.props.onPressLink}
+                                />)
+                            )
+                        )}
+                </View>);
         } else {
             return (null);
         }
@@ -458,9 +460,9 @@ export default class Pdf extends Component {
 
 if (Platform.OS === "android" || Platform.OS === "ios") {
     var PdfCustom = PdfViewNativeComponent;
-}  else if (Platform.OS === "windows") {
+} else if (Platform.OS === "windows") {
     var PdfCustom = requireNativeComponent('RCTPdf', Pdf, {
-        nativeOnly: {path: true, onChange: true},
+        nativeOnly: { path: true, onChange: true },
     })
 }
 
